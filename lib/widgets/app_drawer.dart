@@ -10,8 +10,8 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         children: [
           UserAccountsDrawerHeader(
-            accountName: const Text('User Name'),
-            accountEmail: const Text('user@example.com'),
+            accountName: const Text('Regio Versatu'),
+            accountEmail: const Text('giuesseppe@giuvaer.com'),
             currentAccountPicture: CircleAvatar(
               backgroundColor: Colors.white24,
               child: Text('U', style: TextStyle(fontSize: 24, color: Colors.white)),

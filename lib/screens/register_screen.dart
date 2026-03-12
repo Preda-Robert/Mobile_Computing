@@ -14,6 +14,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _obscure = true;
+  bool _loading = false;
 
   @override
   void dispose() {
@@ -21,6 +22,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleRegister() async {
+    if (_formKey.currentState?.validate() != true) return;
+    setState(() => _loading = true);
+
+    final error = await AuthService().register(
+      _name.text.trim(),
+      _email.text.trim(),
+      _password.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (error == null) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
   }
 
   @override
@@ -37,14 +60,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 TextFormField(
                   controller: _name,
                   decoration: const InputDecoration(labelText: 'Full name'),
-                  validator: (v) => (v == null || v.isEmpty) ? 'Enter name' : null,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Enter name' : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _email,
                   decoration: const InputDecoration(labelText: 'Email'),
                   keyboardType: TextInputType.emailAddress,
-                  validator: (v) => (v == null || v.isEmpty) ? 'Enter email' : null,
+                  validator: (v) =>
+                      (v == null || v.isEmpty) ? 'Enter email' : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -52,30 +77,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: InputDecoration(
                     labelText: 'Password',
                     suffixIcon: IconButton(
-                      icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                      icon: Icon(
+                          _obscure ? Icons.visibility_off : Icons.visibility),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),
                   ),
                   obscureText: _obscure,
-                  validator: (v) => (v == null || v.length < 6) ? 'Enter 6+ chars' : null,
+                  validator: (v) =>
+                      (v == null || v.length < 6) ? 'Enter 6+ chars' : null,
                 ),
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    child: const Text('Register'),
-                    onPressed: () async {
-                      if (_formKey.currentState?.validate() == true) {
-                        final ok = await AuthService().register(_name.text.trim(), _email.text.trim(), _password.text);
-                        if (ok) {
-                          Navigator.pushReplacementNamed(context, '/home');
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registration failed (email exists)')));
-                        }
-                      }
-                    },
-                  ),
-                ),
+                _loading
+                    ? const CircularProgressIndicator()
+                    : SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _handleRegister,
+                          child: const Text('Register'),
+                        ),
+                      ),
               ],
             ),
           ),

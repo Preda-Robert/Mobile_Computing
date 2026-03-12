@@ -1,31 +1,79 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AuthService {
-  static final Map<String, Map<String, String>> _users = {};
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  String? _currentUserEmail;
+  User? get currentUser => _auth.currentUser;
+  String? get currentUserEmail => _auth.currentUser?.email;
 
-  Future<bool> signIn(String email, String password) async {
-    final u = _users[email];
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (u == null) return false;
-    final ok = u['password'] == password;
-    if (ok) _currentUserEmail = email;
-    return ok;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  Future<String?> signIn(String email, String password) async {
+    try {
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      return null; 
+    } on FirebaseAuthException catch (e) {
+      return _friendlyError(e.code);
+    } catch (e) {
+      return 'error';
+    }
   }
 
-  Future<bool> register(String name, String email, String password) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    if (_users.containsKey(email)) return false;
-    _users[email] = {'name': name, 'password': password};
-    _currentUserEmail = email;
-    return true;
+  Future<String?> register(String name, String email, String password) async {
+    try {
+      final cred = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      await cred.user?.updateDisplayName(name);
+
+      await _db.collection('users').doc(cred.user!.uid).set({
+        'name': name,
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      return null; 
+    } on FirebaseAuthException catch (e) {
+      return _friendlyError(e.code);
+    } catch (e) {
+      return 'An unexpected error occurred.';
+    }
   }
 
   Future<void> signOut() async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _currentUserEmail = null;
+    await _auth.signOut();
   }
 
-  String? get currentUserEmail => _currentUserEmail;
+  Future<Map<String, dynamic>?> getUserProfile(String uid) async {
+    final doc = await _db.collection('users').doc(uid).get();
+    return doc.data();
+  }
 
-  String? getName(String? email) => email == null ? null : _users[email]?['name'];
+  Future<void> updateProfile(String uid, Map<String, dynamic> data) async {
+    await _db.collection('users').doc(uid).update(data);
+  }
+
+
+  String _friendlyError(String code) {
+    switch (code) {
+      case 'user-not-found':
+        return 'No account found for this email.';
+      case 'wrong-password':
+        return 'Incorrect password.';
+      case 'email-already-in-use':
+        return 'An account with this email already exists.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'weak-password':
+        return 'Password must be at least 6 characters.';
+      case 'network-request-failed':
+        return 'Network error – check your connection.';
+      default:
+        return 'Authentication error ($code).';
+    }
+  }
 }

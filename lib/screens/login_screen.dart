@@ -13,12 +13,34 @@ class _LoginScreenState extends State<LoginScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _obscure = true;
+  bool _loading = false;
 
   @override
   void dispose() {
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
+    if (_formKey.currentState?.validate() != true) return;
+    setState(() => _loading = true);
+
+    final error = await AuthService().signIn(
+      _email.text.trim(),
+      _password.text,
+    );
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (error == null) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
   }
 
   @override
@@ -36,7 +58,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _email,
                 decoration: const InputDecoration(labelText: 'Email'),
                 keyboardType: TextInputType.emailAddress,
-                validator: (v) => (v == null || v.isEmpty) ? 'Enter email' : null,
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Enter email' : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -44,32 +67,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: InputDecoration(
                   labelText: 'Password',
                   suffixIcon: IconButton(
-                    icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(
+                        _obscure ? Icons.visibility_off : Icons.visibility),
                     onPressed: () => setState(() => _obscure = !_obscure),
                   ),
                 ),
                 obscureText: _obscure,
-                validator: (v) => (v == null || v.length < 6) ? 'Enter 6+ chars' : null,
+                validator: (v) =>
+                    (v == null || v.length < 6) ? 'Enter 6+ chars' : null,
               ),
               const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  child: const Text('Login'),
-                  onPressed: () async {
-                    if (_formKey.currentState?.validate() == true) {
-                      final ok = await AuthService().signIn(_email.text.trim(), _password.text);
-                      if (ok) {
-                        Navigator.pushReplacementNamed(context, '/home');
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Login failed')),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
+              _loading
+                  ? const CircularProgressIndicator()
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _handleLogin,
+                        child: const Text('Login'),
+                      ),
+                    ),
               TextButton(
                 onPressed: () => Navigator.pushNamed(context, '/register'),
                 child: const Text('Create an account'),

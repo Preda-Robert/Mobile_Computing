@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// Firebase initialization removed for local run. Add Firebase.init when configuring platforms.
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';

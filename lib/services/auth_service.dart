@@ -1,5 +1,4 @@
 class AuthService {
-  // Simple in-memory user store: email -> {name, password}
   static final Map<String, Map<String, String>> _users = {};
 
   String? _currentUserEmail;

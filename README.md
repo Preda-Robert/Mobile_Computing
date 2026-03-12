@@ -1,5 +1,3 @@
-# E-Learning App UI Scaffold
-
 This workspace contains a minimal Flutter UI scaffold for an e-learning app with:
 
 - Login screen

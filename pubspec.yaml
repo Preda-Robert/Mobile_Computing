@@ -10,6 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
   cupertino_icons: ^1.0.2
+  firebase_auth: ^6.2.0
   # Removed firebase packages to allow running locally without platform config.
   # Add firebase_core, firebase_auth, cloud_firestore later when configuring platforms.
 

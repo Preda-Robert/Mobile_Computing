@@ -1,0 +1,21 @@
+name: e_learning_app
+description: A simple e-learning UI scaffold (Login/Register/Home + Drawer)
+publish_to: 'none'
+version: 0.0.1
+environment:
+  sdk: '>=2.17.0 <3.0.0'
+  flutter: '>=2.5.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  # Removed firebase packages to allow running locally without platform config.
+  # Add firebase_core, firebase_auth, cloud_firestore later when configuring platforms.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

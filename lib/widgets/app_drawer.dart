@@ -1,0 +1,65 @@
+import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
+
+class AppDrawer extends StatelessWidget {
+  const AppDrawer({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Drawer(
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            accountName: const Text('User Name'),
+            accountEmail: const Text('user@example.com'),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white24,
+              child: Text('U', style: TextStyle(fontSize: 24, color: Colors.white)),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person),
+            title: const Text('My Account'),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('My Account tapped')));
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit),
+            title: const Text('Edit Profile'),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Edit Profile tapped')));
+            },
+          ),
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Logout'),
+            onTap: () async {
+              Navigator.pop(context);
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Confirm logout'),
+                  content: const Text('Are you sure you want to log out?'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+                    TextButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Logout')),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                await AuthService().signOut();
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logged out')));
+                Navigator.pushReplacementNamed(context, '/login');
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
